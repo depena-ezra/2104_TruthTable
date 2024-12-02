@@ -1,0 +1,62 @@
+[
+    {
+        "question": "What is the rate of change of displacement?",
+        "answer": "Velocity"
+    },
+    {
+        "question": "What is the rate of change of velocity?",
+        "answer": "Acceleration"
+    },
+    {
+        "question": "What law relates force, mass, and acceleration?",
+        "answer": "Newton's second law"
+    },
+    {
+        "question": "What quantity is the integral of force over distance?",
+        "answer": "Work"
+    },
+    {
+        "question": "What quantity is the time rate of work done?",
+        "answer": "Power"
+    },
+    {
+        "question": "What is the derivative of position with respect to time?",
+        "answer": "Velocity"
+    },
+    {
+        "question": "What is the derivative of velocity with respect to time?",
+        "answer": "Acceleration"
+    },
+    {
+        "question": "What law describes the relationship between mass, velocity, and momentum?",
+        "answer": "Conservation of momentum"
+    },
+    {
+        "question": "What is the integral of acceleration with respect to time?",
+        "answer": "Velocity"
+    },
+    {
+        "question": "What theorem is used to relate work and energy?",
+        "answer": "Work-energy theorem"
+    },
+    {
+        "question": "What principle states that energy cannot be created or destroyed?",
+        "answer": "Conservation of energy"
+    },
+    {
+        "question": "What quantity represents the change in an object's kinetic energy?",
+        "answer": "Work"
+    },
+    {
+        "question": "What law states that the force of gravity is inversely proportional to the square of the distance between two objects?",
+        "answer": "Newton's law of gravitation"
+    },
+    {
+        "question": "What is the potential energy of an object at height (h) above the ground?",
+        "answer": "mgh"
+    },
+    {
+        "question": "What quantity is the second derivative of position with respect to time?",
+        "answer": "Acceleration"
+    }
+]

@@ -1,0 +1,62 @@
+[
+    {
+        "question": "What part of speech names a person, place, thing, or idea?",
+        "answer": "Noun"
+    },
+    {
+        "question": "What part of speech describes a noun?",
+        "answer": "Adjective"
+    },
+    {
+        "question": "What part of speech describes a verb?",
+        "answer": "Adverb"
+    },
+    {
+        "question": "What part of speech connects words, phrases, or clauses?",
+        "answer": "Conjunction"
+    },
+    {
+        "question": "What type of sentence contains one independent clause?",
+        "answer": "Simple"
+    },
+    {
+        "question": "What type of sentence contains two independent clauses?",
+        "answer": "Compound"
+    },
+    {
+        "question": "What type of sentence contains an independent and a dependent clause?",
+        "answer": "Complex"
+    },
+    {
+        "question": "What type of sentence contains multiple independent and dependent clauses?",
+        "answer": "Compound-complex"
+    },
+    {
+        "question": "What tense describes actions happening now?",
+        "answer": "Present"
+    },
+    {
+        "question": "What tense describes actions that happened in the past?",
+        "answer": "Past"
+    },
+    {
+        "question": "What tense describes actions that will happen in the future?",
+        "answer": "Future"
+    },
+    {
+        "question": "What is the agreement rule for subject and verb?",
+        "answer": "Agreement"
+    },
+    {
+        "question": "What voice has the subject performing the action?",
+        "answer": "Active"
+    },
+    {
+        "question": "What voice has the subject receiving the action?",
+        "answer": "Passive"
+    },
+    {
+        "question": "What object receives the action of the verb?",
+        "answer": "Direct"
+    }
+]
