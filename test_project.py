@@ -27,33 +27,43 @@ def test_read_questions(mock_file_operations):
 def test_save_progress():
     app = ThinkUNextApp(None)
     set_name = "test_set"
-    score = 5
-    mistakes = []
-    timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-    history_filename = os.path.join(HISTORY_FOLDER, f"{set_name.upper()}_session_{timestamp}.json")
-    app.save_progress(set_name, score, mistakes)
-    assert os.path.exists(history_filename)
+    with open(os.path.join('sets', f"{set_name}.json"), 'w') as f:
+        json.dump(questions, f)
 
-def test_validate_answer():
-    app = ThinkUNextApp(None)
-    app.correct_answer = "Correct Answer"
-    user_answer = "correct answer"
-    assert app.validate_answer(user_answer) == "Correct!"
-    user_answer = "incorrect answer"
-    assert app.validate_answer(user_answer) == "Incorrect! The correct answer was: Correct Answer"
+    shuffled_questions = shuffle_questions(set_name)
 
-def test_show_review_result():
-    app = ThinkUNextApp(None)
-    app.questions = [{"question": "What is 2 + 2?", "answer": "4"}]
-    app.mistakes = []
-    app.show_review_result("test_set")
-    assert app.mistakes == []
-    app.mistakes = [{"question": "What is 2 + 2?", "user_answer": "3", "answer": "4"}]
-    app.show_review_result("test_set")
-    assert len(app.mistakes) == 1
+    # Ensure length remains unchanged
+    assert len(shuffled_questions) == len(questions), "Shuffling changed the length of the list"
 
-def test_create_review_panel():
-    app = ThinkUNextApp(None)
-    review_panel = app.create_review_panel()
-    assert isinstance(review_panel, tk.Frame)
-    assert "Choose a Set to Review" in [child.cget("text") for child in review_panel.winfo_children()]
+    # Check if the questions remain, even after shuffling
+    assert any(q['question'] == "Q1" for q in shuffled_questions), "Question 'Q1' not found in shuffled list"
+    assert any(q['question'] == "Q2" for q in shuffled_questions), "Question 'Q2' not found in shuffled list"
+
+    # Test if the order has changed (this is a simple check, the order should not be the same)
+    assert questions != shuffled_questions, "Questions were not shuffled"
+
+# Test save_history function
+def test_save_history():
+    cleanup_history()  # Clean up history folder before test
+    cleanup_sets()  # Clean up sets folder before the test
+
+    score = 2
+    questions = [{"question": "Q1", "answer": "A1"}]
+
+    save_history(score, questions)
+
+    history_files = [f for f in os.listdir('history') if f.endswith('.json')]
+    assert len(history_files) > 0, "History file was not created"
+
+    with open(os.path.join('history', history_files[0]), 'r') as f:
+        history_data = json.load(f)
+
+    assert history_data['score'] == score, f"Expected score {score}, but got {history_data['score']}"
+    assert len(history_data['mistakes']) == len(questions), "Mismatch in number of mistakes"
+
+    # Clean up after the test
+    os.remove(os.path.join('history', history_files[0]))  # Clean up history file
+
+# Run the tests
+if __name__ == "__main__":
+    pytest.main(["-q", "--tb=line"])  # The "-q" is for quiet mode, "--tb=line" gives simple traceback

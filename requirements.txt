@@ -1,6 +1,0 @@
-pytest
-tkinter
-json5
-
-#   Install these libraries by running:
-#   pip install -r requirements.txt
