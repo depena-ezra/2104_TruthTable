@@ -6,21 +6,15 @@ import json
 import os
 import random
 
-SETS_FOLDER = 'sets'
+USER_SETS = 'sets'
 ACP_SETS = 'acp_sets'
-ALL_SETS = SETS_FOLDER and ACP_SETS
+ALL_SETS = USER_SETS and ACP_SETS
 HISTORY_FOLDER = 'history'
-
-if not os.path.exists(SETS_FOLDER):
-    os.makedirs(SETS_FOLDER)
-
-if not os.path.exists(HISTORY_FOLDER):
-    os.makedirs(HISTORY_FOLDER)
 
 class ThinkUNextApp:
     def __init__(self, root):
         self.root = root
-        self.root.title("Think-U Next: Reviewer")
+        self.root.title("Think U Next: Reviewer")
         
         self.root.attributes('-fullscreen', True)
 
@@ -42,6 +36,8 @@ class ThinkUNextApp:
                                    ('!active', '#470898')]) 
 
         self.create_widgets()
+        self.temp_questions = []
+
 
     def create_widgets(self):
         self.main_frame = tk.Frame(self.root, bg="#FEF3E2")
@@ -78,25 +74,21 @@ class ThinkUNextApp:
         self.content_frame = tk.Frame(self.main_frame, bg="#FEF3E2")
         self.content_frame.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
 
-        # Create home_panel only once
         self.home_panel = tk.Frame(self.content_frame, bg="#FEF3E2")
         self.home_panel.pack(fill=tk.BOTH, expand=True)
 
-        # Try to load and display the image
         try:
             self.image = tk.PhotoImage(file="graphics/TUN.png")
         except Exception as e:
             print(f"Error loading image: {e}")
-            self.image = None  # Default to None if image can't be loaded
+            self.image = None  
 
         if self.image:
-            # Pack the image into the home_panel
             self.image_label = tk.Label(self.home_panel, image=self.image, bg="#FEF3E2")
-            self.image_label.pack(pady=(100, 20), expand=True)
+            self.image_label.pack(pady=(180, 100), expand=True)
         else:
             print("Image could not be loaded.")
 
-        # Create other panels
         self.acp_panel = self.create_acp_panel()
         self.create_panel = self.create_set_panel()
         self.edit_panel = self.create_edit_panel()
@@ -106,6 +98,7 @@ class ThinkUNextApp:
 
     def switch_panel(self, panel_name):
         print(f"[INFO] Switching to {panel_name} panel.") 
+        
         self.home_panel.pack_forget()
         self.acp_panel.pack_forget()
         self.create_panel.pack_forget()
@@ -126,130 +119,127 @@ class ThinkUNextApp:
         else:
             self.home_panel.pack(fill=tk.BOTH, expand=True)
 
+
     def create_acp_panel(self):
         acp_panel = tk.Frame(self.content_frame, bg="#FEF3E2")
-        acp_sets = [
-            "Variables",
-            "String and Methods",
-            "Conditionals",
-            "Lists",
-            "Loops",
-            "Errors"
-        ]
+        
+        acp_sets = {
+            "Variables": "Variables.json",
+            "String and Methods": "StringAndMethods.json",
+            "Conditionals": "Conditionals.json",
+            "Lists": "Lists.json",
+            "Loops": "Loops.json",
+            "Errors": "Errors.json"
+        }
 
-        acp_label = tk.Label(acp_panel, text="Choose a Problem Set to Review", font=('Helvetica', 16, 'bold'), bg="#FEF3E2", fg="#333")
+        acp_label = tk.Label(
+            acp_panel,
+            text="Choose a Problem Set to Review",
+            font=('Helvetica', 16, 'bold'),
+            bg="#FEF3E2",
+            fg="#470898"
+        )
         acp_label.pack(pady=60)
 
-        for set_name in acp_sets:
-            button = ttk.Button(acp_panel, text=set_name, command=lambda set_name=set_name: self.start_review(set_name))
+        for set_name, filename in acp_sets.items():
+            button = ttk.Button(
+                acp_panel,
+                text=set_name,
+                command=lambda file=filename: self.switch_to_review_panel(file)
+            )
             button.pack(pady=10, ipadx=10, ipady=10)
 
         return acp_panel
         
     def create_set_panel(self):
-        set_panel = tk.Frame(self.content_frame, bg="#FEF3E2")
-        print("Creating 'Create Set' panel")
+        create_panel = tk.Frame(self.content_frame, bg="#FEF3E2")
 
-        set_panel.grid_rowconfigure(0, weight=1)
-        set_panel.grid_rowconfigure(1, weight=1)
-        set_panel.grid_rowconfigure(2, weight=1)
-        set_panel.grid_rowconfigure(3, weight=1)
-        set_panel.grid_rowconfigure(4, weight=1)
-        set_panel.grid_rowconfigure(5, weight=1)
-        set_panel.grid_rowconfigure(6, weight=1)
+        create_label = tk.Label(create_panel, text="Create a New Set", font=('Helvetica', 16, 'bold'), bg="#FEF3E2", fg="#470898")
+        create_label.pack(pady=(60, 5))
 
-        set_panel.grid_columnconfigure(0, weight=1)
-        set_panel.grid_columnconfigure(1, weight=1)
+        self.create_set_name_var = tk.StringVar()
 
-        set_title_label = tk.Label(set_panel, text="Create a New Set", font=('Helvetica', 16, 'bold'), bg="#FEF3E2", fg="#333")
-        set_title_label.grid(row=0, column=0, columnspan=2, pady=20, sticky="nsew")  
+        set_name_label = tk.Label(create_panel, text="Set Name: ", font=('Helvetica', 12), bg="#FEF3E2")
+        set_name_label.pack(pady=5)
 
-        set_name_label = tk.Label(set_panel, text="Set Name: ", font=('Helvetica', 12), bg="#FEF3E2")
-        set_name_label.grid(row=1, column=0, sticky="e", padx=10, pady=10)  
+        set_name_entry = tk.Entry(create_panel, font=('Helvetica', 12), textvariable=self.create_set_name_var)
+        set_name_entry.pack(pady=10)
 
-        self.set_name_var = tk.StringVar()
-        set_name_entry = tk.Entry(set_panel, font=('Helvetica', 12), textvariable=self.set_name_var)
-        set_name_entry.grid(row=1, column=1, padx=10, pady=10, sticky="w")
+        self.create_questions_frame = tk.Frame(create_panel, bg="#FEF3E2")
+        self.create_questions_frame.pack(pady=20)
 
-        question_label = tk.Label(set_panel, text="Problem: ", font=('Helvetica', 12), bg="#FEF3E2")
-        question_label.grid(row=2, column=0, sticky="e", padx=10, pady=10) 
+        self.create_new_question_var = tk.StringVar()
+        self.create_new_answer_var = tk.StringVar()
 
-        self.new_question_var = tk.StringVar()
-        question_entry = tk.Entry(set_panel, font=('Helvetica', 12), textvariable=self.new_question_var)
-        question_entry.grid(row=2, column=1, padx=10, pady=10, sticky="w")  
+        new_question_label = tk.Label(create_panel, text="New Question: ", font=('Helvetica', 12), bg="#FEF3E2")
+        new_question_label.pack(pady=5)
 
-        answer_label = tk.Label(set_panel, text="Answer: ", font=('Helvetica', 12), bg="#FEF3E2")
-        answer_label.grid(row=3, column=0, sticky="e", padx=10, pady=10) 
+        new_question_entry = tk.Entry(create_panel, font=('Helvetica', 12), textvariable=self.create_new_question_var)
+        new_question_entry.pack(pady=5)
 
-        self.new_answer_var = tk.StringVar()
-        answer_entry = tk.Entry(set_panel, font=('Helvetica', 12), textvariable=self.new_answer_var)
-        answer_entry.grid(row=3, column=1, padx=10, pady=10, sticky="w")  
+        new_answer_label = tk.Label(create_panel, text="New Answer: ", font=('Helvetica', 12), bg="#FEF3E2")
+        new_answer_label.pack(pady=5)
 
-        add_question_button = ttk.Button(set_panel, text="Add Question", command=self.add_question)
-        add_question_button.grid(row=4, column=0, columnspan=2, pady=5, sticky="n")  
+        new_answer_entry = tk.Entry(create_panel, font=('Helvetica', 12), textvariable=self.create_new_answer_var)
+        new_answer_entry.pack(pady=5)
 
-        self.questions_frame = tk.Frame(set_panel, bg="#FEF3E2")
-        self.questions_frame.grid(row=5, column=0, columnspan=2, pady=10, sticky="nsew")  
+        add_button = ttk.Button(create_panel, text="Add Question", command=self.set_add_question)
+        add_button.pack(pady=10)
 
-        finish_button = ttk.Button(set_panel, text="Finish", command=self.finish_set_creation)
-        finish_button.grid(row=6, column=0, columnspan=2, pady=5, sticky="n") 
+        finish_button = ttk.Button(create_panel, text="Finish", command=self.finish_create_set)
+        finish_button.pack(pady=20)
 
-        return set_panel
+        return create_panel
 
-
-    def add_question(self):
-        new_question = self.new_question_var.get().strip()
-        new_answer = self.new_answer_var.get().strip()
+    def set_add_question(self):
+        new_question = self.create_new_question_var.get().strip()
+        new_answer = self.create_new_answer_var.get().strip()
 
         if new_question and new_answer:
-            set_name = self.set_name_var.get().strip()
+            set_name = self.create_set_name_var.get().strip()
             if not set_name:
                 messagebox.showerror("Error", "Please provide a set name before adding questions.")
                 return
 
-            set_file = os.path.join(SETS_FOLDER, f"{set_name}.json")
+            self.temp_questions.append({"question": new_question, "answer": new_answer})
 
-            if os.path.exists(set_file):
-                with open(set_file, 'r') as f:
-                    questions = json.load(f)
-            else:
-                questions = []
+            row = len(self.temp_questions) - 1  
 
-            questions.append({"question": new_question, "answer": new_answer})
-
-            with open(set_file, 'w') as f:
-                json.dump(questions, f, indent=4)
-
-            row = len(self.questions_frame.winfo_children())
-            question_label = tk.Label(self.questions_frame, text=f"{row + 1}. {new_question}", font=('Helvetica', 12), bg="#FEF3E2", wraplength=300, anchor="w")
+            question_label = tk.Label(self.create_questions_frame, text=f"{row + 1}. {new_question}", font=('Helvetica', 12), bg="#FEF3E2", wraplength=300, anchor="w")
             question_label.grid(row=row, column=0, sticky="w", padx=10)
-            answer_label = tk.Label(self.questions_frame, text=f"Answer: {new_answer}", font=('Helvetica', 12), bg="#FEF3E2", wraplength=300, anchor="w")
+            answer_label = tk.Label(self.create_questions_frame, text=f"Answer: {new_answer}", font=('Helvetica', 12), bg="#FEF3E2", wraplength=300, anchor="w")
             answer_label.grid(row=row, column=1, sticky="w", padx=10)
 
-            self.new_question_var.set("")
-            self.new_answer_var.set("")
+            self.create_new_question_var.set("")
+            self.create_new_answer_var.set("")
         else:
             messagebox.showerror("Error", "Please provide both a question and an answer.")
 
-    def finish_set_creation(self):
-        set_name = self.set_name_var.get().strip()
+    def finish_create_set(self):
+        set_name = self.create_set_name_var.get().strip()
 
         if set_name:
-            set_file = os.path.join(SETS_FOLDER, f"{set_name}.json")
-            if not os.path.exists(set_file):
+            set_file = os.path.join(USER_SETS, f"{set_name}.json")
+
+            if self.temp_questions:
                 with open(set_file, 'w') as f:
-                    json.dump([], f, indent=4)
-            messagebox.showinfo("Success", f"Set '{set_name}' saved successfully!")
+                    json.dump(self.temp_questions, f, indent=4)
+
+                messagebox.showinfo("Success", f"Set '{set_name}' saved successfully!")
+
+                self.temp_questions = []
+            else:
+                messagebox.showerror("Error", "Please add at least one question before finishing.")
         else:
             messagebox.showerror("Error", "Please provide a name for the set.")
-  
+
     def create_edit_panel(self):
         edit_panel = tk.Frame(self.content_frame, bg="#FEF3E2")
 
-        edit_label = tk.Label(edit_panel, text="Edit an Existing Set", font=('Helvetica', 16, 'bold'), bg="#FEF3E2", fg="#333")
-        edit_label.pack(pady=20)
+        edit_label = tk.Label(edit_panel, text="Edit an Existing Set", font=('Helvetica', 16, 'bold'), bg="#FEF3E2", fg="#470898")
+        edit_label.pack(pady=(60, 5))
 
-        set_files = [f for f in os.listdir(SETS_FOLDER) if f.endswith('.json')]
+        set_files = [f for f in os.listdir(USER_SETS) if f.endswith('.json')]
         if set_files:
             set_names = [os.path.splitext(f)[0] for f in set_files]
 
@@ -262,7 +252,7 @@ class ThinkUNextApp:
             edit_button = ttk.Button(edit_panel, text="Edit Selected Set", command=self.edit_selected_set)
             edit_button.pack(pady=10)
         else:
-            no_sets_label = tk.Label(edit_panel, text="No sets available.", font=('Helvetica', 14, 'bold'), bg="#FEF3E2", fg="#333")
+            no_sets_label = tk.Label(edit_panel, text="No sets available.", font=('Helvetica', 14, 'bold'), bg="#FEF3E2", fg="#470898")
             no_sets_label.pack(pady=20)
 
         return edit_panel
@@ -270,7 +260,7 @@ class ThinkUNextApp:
 
     def edit_selected_set(self):
         set_name = self.edit_set_var.get()
-        set_file = os.path.join(SETS_FOLDER, f"{set_name}.json")
+        set_file = os.path.join(USER_SETS, f"{set_name}.json")
 
         with open(set_file, 'r') as f:
             questions = json.load(f)
@@ -327,7 +317,6 @@ class ThinkUNextApp:
         save_button = ttk.Button(self.edit_panel, text="Save Changes", command=lambda: self.save_changes(set_file, questions))
         save_button.pack(pady=20)
 
-
     def add_question(self, set_file, questions):
         new_question = self.new_question_var.get().strip()
         new_answer = self.new_answer_var.get().strip()
@@ -373,29 +362,6 @@ class ThinkUNextApp:
 
 
     def create_review_panel(self):
-        review_panel = tk.Frame(self.content_frame, bg="#FEF3E2")
-
-        review_label = tk.Label(review_panel, text="Choose a Set to Review", font=('Helvetica', 16, 'bold'), bg="#FEF3E2", fg="#333")
-        review_label.pack(pady=20)
-
-        set_files = [f[:-5] for f in os.listdir(SETS_FOLDER) if f.endswith('.json')]
-
-        if not set_files:
-            no_sets_label = tk.Label(review_panel, text="No sets available to review.", font=('Helvetica', 14, 'bold'), bg="#FEF3E2", fg="#333")
-            no_sets_label.pack(pady=20)
-        else:
-            self.set_var = tk.StringVar()
-            self.set_var.set(set_files[0])  
-
-            set_dropdown = ttk.Combobox(review_panel, textvariable=self.set_var, values=set_files, state="readonly", font=('Helvetica', 12))
-            set_dropdown.pack(pady=10)
-
-            start_review_button = ttk.Button(review_panel, text="Start Review", command=self.start_review)
-            start_review_button.pack(pady=20)
-
-        return review_panel
-
-    def create_review_panel(self):
         USER_SETS = 'sets'
         review_panel = tk.Frame(self.content_frame, bg="#FEF3E2")
 
@@ -404,9 +370,9 @@ class ThinkUNextApp:
             text="Choose a Set to Review", 
             font=('Helvetica', 16, 'bold'), 
             bg="#FEF3E2", 
-            fg="#333"
+            fg="#470898"
         )
-        review_label.pack(pady=20)
+        review_label.pack(pady=(60, 5))
 
         set_files = [f[:-5] for f in os.listdir(USER_SETS) if f.endswith('.json')]
 
@@ -416,7 +382,7 @@ class ThinkUNextApp:
                 text="No sets available to review.", 
                 font=('Helvetica', 14, 'bold'), 
                 bg="#FEF3E2", 
-                fg="#333"
+                fg="#470898"
             )
             no_sets_label.pack(pady=20)
         else:
@@ -444,7 +410,7 @@ class ThinkUNextApp:
 
     def start_review(self):
         set_name = self.set_var.get()
-        set_file = os.path.join(SETS_FOLDER, f"{set_name}.json")
+        set_file = os.path.join(USER_SETS, f"{set_name}.json")
 
         with open(set_file, 'r') as f:
             self.questions = json.load(f)
@@ -475,15 +441,15 @@ class ThinkUNextApp:
         question_label = tk.Label(
             self.review_panel,
             text=f"{question_text}",
-            font=('Helvetica', 20, 'bold'),
+            font=('Helvetica', 30, 'bold'),
             bg="#FEF3E2",
         )
-        question_label.pack(pady=20)
+        question_label.pack(pady=(220, 20))
 
         answer_frame = tk.Frame(self.review_panel, bg="#FEF3E2") 
         answer_frame.pack(pady=10)
 
-        self.user_answer_entry = tk.Text(answer_frame, font=('Helvetica', 12), height=5, width=60) 
+        self.user_answer_entry = tk.Text(answer_frame, font=('Helvetica', 15), height=5, width=60) 
         self.user_answer_entry.pack(side="left", fill="both", expand=True)
 
         scrollbar = tk.Scrollbar(answer_frame, command=self.user_answer_entry.yview)
@@ -505,7 +471,7 @@ class ThinkUNextApp:
         feedback_label = tk.Label(
             self.review_panel,
             text="",
-            font=('Helvetica', 14),
+            font=('Helvetica', 30),
             bg="#FEF3E2",
         )
 
@@ -522,12 +488,10 @@ class ThinkUNextApp:
                 "answer": self.correct_answer,
             })
 
-        feedback_label.pack(pady=20)
+        feedback_label.pack(pady=220)
 
         next_button = ttk.Button(self.review_panel, text="Next Question", command=self.next_question)
         next_button.pack(pady=20)
-
-
 
     def next_question(self):
         self.current_question_index += 1
@@ -544,10 +508,10 @@ class ThinkUNextApp:
         result_label = tk.Label(
             self.review_panel,
             text=f"Your Score: {score}/{total_questions}",
-            font=('Helvetica', 16, 'bold'),
+            font=('Helvetica', 30, 'bold'),
             bg="#FEF3E2"
         )
-        result_label.pack(pady=20)
+        result_label.pack(pady=(220, 20))
 
         if score == total_questions:
             message_label = tk.Label(
@@ -600,19 +564,17 @@ class ThinkUNextApp:
 
         with open(history_filename, 'w') as f:
             json.dump(session_data, f, indent=4)
-
-
         
     def create_history_panel(self):
         history_panel = tk.Frame(self.content_frame, bg="#FEF3E2")
 
-        history_label = tk.Label(history_panel, text="Review History", font=('Helvetica', 16, 'bold'), bg="#FEF3E2", fg="#333")
-        history_label.pack(pady=20)
+        history_label = tk.Label(history_panel, text="Review History", font=('Helvetica', 16, 'bold'), bg="#FEF3E2", fg="#470898")
+        history_label.pack(pady=(60, 5))
 
         history_files = [f for f in os.listdir(HISTORY_FOLDER) if f.endswith('.json')]
 
         if not history_files:
-            no_history_label = tk.Label(history_panel, text="No review history available.", font=('Helvetica', 14, 'bold'), bg="#FEF3E2", fg="#333")
+            no_history_label = tk.Label(history_panel, text="No review history available.", font=('Helvetica', 14, 'bold'), bg="#FEF3E2", fg="#470898")
             no_history_label.pack(pady=20)
         else:
             set_names = list(set(file.split('_')[0] for file in history_files))  
