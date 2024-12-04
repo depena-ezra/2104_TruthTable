@@ -1,6 +1,6 @@
 import tkinter as tk
 from tkinter import ttk
-from tkinter import messagebox
+from tkinter import messagebox, PhotoImage
 from datetime import datetime
 import json
 import os
@@ -31,11 +31,15 @@ class ThinkUNextApp:
                              font=('Helvetica', 14, 'bold'),
                              padding=10,
                              relief="flat",
-                             background="#FAB12F",  
-                             foreground="#FA812F")  
+                             background="#FEF3E2",  
+                             foreground="#470898",
+                             borderwidth=0,
+                             width=15,
+                             height=2)        
+
         self.style.map('TButton',
-                       background=[('active', '#FA4032'),  
-                                   ('!active', '#FA812F')]) 
+                       background=[('active', '#470898'),  
+                                   ('!active', '#470898')]) 
 
         self.create_widgets()
 
@@ -43,25 +47,29 @@ class ThinkUNextApp:
         self.main_frame = tk.Frame(self.root, bg="#FEF3E2")
         self.main_frame.pack(fill=tk.BOTH, expand=True)
 
-        self.sidebar_frame = tk.Frame(self.main_frame, width=200, bg="#FAB12F", relief="sunken", borderwidth=2)
+        self.sidebar_frame = tk.Frame(self.main_frame, width=200, bg="#FAB12F", borderwidth=2)
         self.sidebar_frame.pack(side=tk.LEFT, fill=tk.Y)
 
-        self.button_frame = tk.Frame(self.sidebar_frame, bg="#FAB12F")
-        self.button_frame.pack(side=tk.TOP, pady=200, padx=40) 
+        self.logo_image = tk.PhotoImage(file="graphics/TUN.LOGO.png")
+        self.logo_label = tk.Label(self.sidebar_frame, image=self.logo_image, bg="#FAB12F")
+        self.logo_label.pack(pady=80)
 
-        self.acp_button = ttk.Button(self.button_frame, text="ACP Problem Sets", command=lambda: self.switch_panel("acp"))
+        self.button_frame = tk.Frame(self.sidebar_frame, bg="#FAB12F")
+        self.button_frame.pack(side=tk.TOP, padx=40)
+
+        self.acp_button = ttk.Button(self.button_frame, text="ACP Sets", command=lambda: self.switch_panel("acp"))
         self.acp_button.pack(fill=tk.X, pady=10)
 
-        self.create_button = ttk.Button(self.button_frame, text="Create a New Set", command=lambda: self.switch_panel("create"))
+        self.create_button = ttk.Button(self.button_frame, text="Create Set", command=lambda: self.switch_panel("create"))
         self.create_button.pack(fill=tk.X, pady=10)
 
-        self.edit_button = ttk.Button(self.button_frame, text="Edit an Existing Set", command=lambda: self.switch_panel("edit"))
+        self.edit_button = ttk.Button(self.button_frame, text="Edit Set", command=lambda: self.switch_panel("edit"))
         self.edit_button.pack(fill=tk.X, pady=10)
 
-        self.review_button = ttk.Button(self.button_frame, text="Review a Set", command=lambda: self.switch_panel("review"))
+        self.review_button = ttk.Button(self.button_frame, text="Review Set", command=lambda: self.switch_panel("review"))
         self.review_button.pack(fill=tk.X, pady=10)
 
-        self.history_button = ttk.Button(self.button_frame, text="View Session History", command=lambda: self.switch_panel("history"))
+        self.history_button = ttk.Button(self.button_frame, text="View History", command=lambda: self.switch_panel("history"))
         self.history_button.pack(fill=tk.X, pady=10)
 
         self.exit_button = ttk.Button(self.button_frame, text="Exit", command=self.exit_program)
@@ -70,34 +78,31 @@ class ThinkUNextApp:
         self.content_frame = tk.Frame(self.main_frame, bg="#FEF3E2")
         self.content_frame.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
 
-        for widget in self.content_frame.winfo_children():
-            widget.destroy()
-        self.content_frame.pack()
-
+        # Create home_panel only once
         self.home_panel = tk.Frame(self.content_frame, bg="#FEF3E2")
         self.home_panel.pack(fill=tk.BOTH, expand=True)
 
-        home_label = tk.Label(self.home_panel, text="Think-U Next", font=('Helvetica', 32, 'bold'), bg="#FEF3E2", fg="#333")
-        home_label.pack(pady=(100, 20)) 
+        # Try to load and display the image
+        try:
+            self.image = tk.PhotoImage(file="graphics/TUN.png")
+        except Exception as e:
+            print(f"Error loading image: {e}")
+            self.image = None  # Default to None if image can't be loaded
 
-        description_label = tk.Label(
-            self.home_panel,
-            text="Your Personal Reviewer to Ace Exams!",
-            font=('Helvetica', 16),
-            bg="#FEF3E2",
-            fg="#666"
-        )
-        description_label.pack(pady=20)
+        if self.image:
+            # Pack the image into the home_panel
+            self.image_label = tk.Label(self.home_panel, image=self.image, bg="#FEF3E2")
+            self.image_label.pack(pady=(100, 20), expand=True)
+        else:
+            print("Image could not be loaded.")
 
-        home_label.config(anchor="center") 
-        description_label.config(anchor="center")  
-
-
+        # Create other panels
         self.acp_panel = self.create_acp_panel()
         self.create_panel = self.create_set_panel()
         self.edit_panel = self.create_edit_panel()
         self.review_panel = self.create_review_panel()
         self.history_panel = self.create_history_panel()
+
 
     def switch_panel(self, panel_name):
         print(f"[INFO] Switching to {panel_name} panel.") 
@@ -140,7 +145,6 @@ class ThinkUNextApp:
             button.pack(pady=10, ipadx=10, ipady=10)
 
         return acp_panel
-
         
     def create_set_panel(self):
         set_panel = tk.Frame(self.content_frame, bg="#FEF3E2")
@@ -187,7 +191,7 @@ class ThinkUNextApp:
         self.questions_frame = tk.Frame(set_panel, bg="#FEF3E2")
         self.questions_frame.grid(row=5, column=0, columnspan=2, pady=10, sticky="nsew")  
 
-        finish_button = ttk.Button(set_panel, text="Finish Set Creation", command=self.finish_set_creation)
+        finish_button = ttk.Button(set_panel, text="Finish", command=self.finish_set_creation)
         finish_button.grid(row=6, column=0, columnspan=2, pady=5, sticky="n") 
 
         return set_panel
