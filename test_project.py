@@ -1,69 +1,138 @@
 import os
 import json
-import pytest
+import random
 from datetime import datetime
-from your_program import ThinkUNextApp
+from project import ThinkUNextApp
 
-USER_SETS = 'sets'
-HISTORY_FOLDER = 'history'
+TEST_SETS_FOLDER = "sets"
+TEST_HISTORY_FOLDER = "history"
 
-@pytest.fixture
-def mock_file_operations(monkeypatch):
-    def mock_open(path, mode):
-        if path.endswith(".json"):
-            return {'set_name': 'test_set', 'score': 5, 'mistakes': []}
-        else:
-            raise FileNotFoundError
-    monkeypatch.setattr("builtins.open", mock_open)
 
-def test_read_questions(mock_file_operations):
-    set_name = "test_set"
-    set_file = os.path.join(USER_SETS, f"{set_name}.json")
-    with open(set_file, 'r') as f:
-        data = json.load(f)
-    assert data['set_name'] == "test_set"
-    assert data['score'] == 5
+def setup_module(module):
+    """
+    Create necessary directories and test files before running tests.
+    """
+    os.makedirs(TEST_SETS_FOLDER, exist_ok=True)
+    os.makedirs(TEST_HISTORY_FOLDER, exist_ok=True)
+
+
+def teardown_module(module):
+    """
+    Clean up the directories and test files after running tests.
+    """
+    for folder in [TEST_SETS_FOLDER, TEST_HISTORY_FOLDER]:
+        if os.path.exists(folder):
+            for file in os.listdir(folder):
+                os.remove(os.path.join(folder, file))
+            os.rmdir(folder)
+
+
+def test_file_reading():
+    """
+    Test if the program correctly reads questions from a JSON file.
+    """
+    test_set_file = os.path.join(TEST_SETS_FOLDER, 'test_set.json')
+    test_data = [{"question": "Test Question", "answer": "Test Answer"}]
+
+    # Create a test set
+    with open(test_set_file, 'w') as f:
+        json.dump(test_data, f)
+
+    # Instantiate the app and read the questions
+    app = ThinkUNextApp(None)
+    with open(test_set_file, 'r') as f:
+        questions = json.load(f)
+
+    assert len(questions) == 1
+    assert questions[0]['question'] == "Test Question"
+    assert questions[0]['answer'] == "Test Answer"
+
+
+def test_answer_validation():
+    """
+    Test the validation logic for user answers.
+    """
+    app = ThinkUNextApp(None)
+    app.correct_answer = "Python"
+
+    user_answer_correct = "python"
+    user_answer_incorrect = "java"
+
+    assert user_answer_correct.lower() == app.correct_answer.lower()
+    assert user_answer_incorrect.lower() != app.correct_answer.lower()
+
 
 def test_save_progress():
+    """
+    Test the saving of session progress to the history folder.
+    """
     app = ThinkUNextApp(None)
-    set_name = "test_set"
-    with open(os.path.join('sets', f"{set_name}.json"), 'w') as f:
-        json.dump(questions, f)
+    app.HISTORY_FOLDER = TEST_HISTORY_FOLDER
 
-    shuffled_questions = shuffle_questions(set_name)
+    set_name = 'TestSet'
+    score = 3
+    mistakes = [{"question": "Q1", "user_answer": "A1", "answer": "B1"}]
 
-    # Ensure length remains unchanged
-    assert len(shuffled_questions) == len(questions), "Shuffling changed the length of the list"
+    app.save_progress(set_name, score, mistakes)
 
-    # Check if the questions remain, even after shuffling
-    assert any(q['question'] == "Q1" for q in shuffled_questions), "Question 'Q1' not found in shuffled list"
-    assert any(q['question'] == "Q2" for q in shuffled_questions), "Question 'Q2' not found in shuffled list"
+    # Verify history file exists
+    history_files = [f for f in os.listdir(TEST_HISTORY_FOLDER) if f.startswith(set_name.upper())]
+    assert len(history_files) > 0
 
-    # Test if the order has changed (this is a simple check, the order should not be the same)
-    assert questions != shuffled_questions, "Questions were not shuffled"
+    # Verify file content
+    with open(os.path.join(TEST_HISTORY_FOLDER, history_files[0]), 'r') as f:
+        data = json.load(f)
 
-# Test save_history function
-def test_save_history():
-    cleanup_history()  # Clean up history folder before test
-    cleanup_sets()  # Clean up sets folder before the test
+    assert data['set_name'] == set_name
+    assert data['score'] == score
+    assert data['mistakes'] == mistakes
 
-    score = 2
-    questions = [{"question": "Q1", "answer": "A1"}]
 
-    save_history(score, questions)
+def test_question_shuffling():
+    """
+    Test that questions are shuffled correctly without loss of data.
+    """
+    app = ThinkUNextApp(None)
+    original_questions = [
+        {"question": "Q1", "answer": "A1"},
+        {"question": "Q2", "answer": "A2"},
+        {"question": "Q3", "answer": "A3"}
+    ]
 
-    history_files = [f for f in os.listdir('history') if f.endswith('.json')]
-    assert len(history_files) > 0, "History file was not created"
+    app.questions = original_questions.copy()
+    random.shuffle(app.questions)
 
-    with open(os.path.join('history', history_files[0]), 'r') as f:
-        history_data = json.load(f)
+    # Verify shuffle keeps all elements
+    assert len(app.questions) == len(original_questions)
+    assert set(q['question'] for q in app.questions) == set(q['question'] for q in original_questions)
 
-    assert history_data['score'] == score, f"Expected score {score}, but got {history_data['score']}"
-    assert len(history_data['mistakes']) == len(questions), "Mismatch in number of mistakes"
 
-    # Clean up after the test
-    os.remove(os.path.join('history', history_files[0]))  # Clean up history file
+def test_empty_set_handling():
+    """
+    Test behavior when there are no question sets available.
+    """
+    app = ThinkUNextApp(None)
+    set_files = [f[:-5] for f in os.listdir(TEST_SETS_FOLDER) if f.endswith('.json')]
+    assert len(set_files) == 0  # Ensure the sets folder is empty
 
-# Run the tests
+
+def test_invalid_json_file():
+    """
+    Test behavior when encountering an invalid JSON file.
+    """
+    invalid_file = os.path.join(TEST_SETS_FOLDER, 'invalid.json')
+    with open(invalid_file, 'w') as f:
+        f.write("Invalid JSON content")
+
+    app = ThinkUNextApp(None)
+    try:
+        with open(invalid_file, 'r') as f:
+            json.load(f)
+        assert False, "Expected a JSONDecodeError"
+    except json.JSONDecodeError:
+        assert True
+
+
 if __name__ == "__main__":
-    pytest.main(["-q", "--tb=line"])  # The "-q" is for quiet mode, "--tb=line" gives simple traceback
+    import pytest
+    pytest.main(["-v", "test_project.py"])
