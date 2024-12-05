@@ -7,8 +7,6 @@ import os
 import random
 
 USER_SETS = 'sets'
-ACP_SETS = 'acp_sets'
-ALL_SETS = USER_SETS and ACP_SETS
 HISTORY_FOLDER = 'history'
 
 class ThinkUNextApp:
@@ -53,9 +51,6 @@ class ThinkUNextApp:
         self.button_frame = tk.Frame(self.sidebar_frame, bg="#FAB12F")
         self.button_frame.pack(side=tk.TOP, padx=40)
 
-        self.acp_button = ttk.Button(self.button_frame, text="ACP Sets", command=lambda: self.switch_panel("acp"))
-        self.acp_button.pack(fill=tk.X, pady=10)
-
         self.create_button = ttk.Button(self.button_frame, text="Create Set", command=lambda: self.switch_panel("create"))
         self.create_button.pack(fill=tk.X, pady=10)
 
@@ -89,7 +84,6 @@ class ThinkUNextApp:
         else:
             print("Image could not be loaded.")
 
-        self.acp_panel = self.create_acp_panel()
         self.create_panel = self.create_set_panel()
         self.edit_panel = self.create_edit_panel()
         self.review_panel = self.create_review_panel()
@@ -100,15 +94,12 @@ class ThinkUNextApp:
         print(f"[INFO] Switching to {panel_name} panel.") 
         
         self.home_panel.pack_forget()
-        self.acp_panel.pack_forget()
         self.create_panel.pack_forget()
         self.edit_panel.pack_forget()
         self.review_panel.pack_forget()
         self.history_panel.pack_forget()
 
-        if panel_name == "acp":
-            self.acp_panel.pack(fill=tk.BOTH, expand=True)
-        elif panel_name == "create":
+        if panel_name == "create":
             self.create_panel.pack(fill=tk.BOTH, expand=True)
         elif panel_name == "edit":
             self.edit_panel.pack(fill=tk.BOTH, expand=True)
@@ -119,38 +110,6 @@ class ThinkUNextApp:
         else:
             self.home_panel.pack(fill=tk.BOTH, expand=True)
 
-
-    def create_acp_panel(self):
-        acp_panel = tk.Frame(self.content_frame, bg="#FEF3E2")
-        
-        acp_sets = {
-            "Variables": "Variables.json",
-            "String and Methods": "StringAndMethods.json",
-            "Conditionals": "Conditionals.json",
-            "Lists": "Lists.json",
-            "Loops": "Loops.json",
-            "Errors": "Errors.json"
-        }
-
-        acp_label = tk.Label(
-            acp_panel,
-            text="Choose a Problem Set to Review",
-            font=('Helvetica', 16, 'bold'),
-            bg="#FEF3E2",
-            fg="#470898"
-        )
-        acp_label.pack(pady=60)
-
-        for set_name, filename in acp_sets.items():
-            button = ttk.Button(
-                acp_panel,
-                text=set_name,
-                command=lambda file=filename: self.switch_to_review_panel(file)
-            )
-            button.pack(pady=10, ipadx=10, ipady=10)
-
-        return acp_panel
-        
     def create_set_panel(self):
         create_panel = tk.Frame(self.content_frame, bg="#FEF3E2")
 
