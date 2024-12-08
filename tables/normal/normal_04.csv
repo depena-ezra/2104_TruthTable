@@ -1,0 +1,5 @@
+p,q,r,~p,p ∧ q,p ∨ q,p → (q ∧ r)
+T,T,T,F,T,T,T
+T,F,F,F,F,T,F
+F,T,T,T,F,T,F
+F,F,F,T,F,F,T
